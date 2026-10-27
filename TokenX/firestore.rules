@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isKrctEmail() {
+      return isAuthenticated() && 
+        request.auth.token.email.matches('.*@krct[.]ac[.]in$');
+    }
+
+    function isWarden() {
+      return isAuthenticated() && 
+        request.auth.token.email == 'hostelwarden@krct.ac.in';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users Collection: /users/{userId}
+    match /users/{userId} {
+      // Warden can view student profiles; students can only view their own
+      allow read: if isWarden() || isOwner(userId);
+
+      // Student registration: can only set role to 'student'
+      // Warden profile: can only be created by hostelwarden@krct.ac.in
+      allow create: if isOwner(userId) && isKrctEmail() &&
+        (request.resource.data.role == 'warden' ? isWarden() : request.resource.data.role == 'student');
+
+      // Prevent role elevation: users cannot modify their assigned role
+      allow update: if isOwner(userId) && 
+        request.resource.data.role == resource.data.role;
+
+      // No document deletion permitted
+      allow delete: if false;
+    }
+
+    // Tokens Collection: /tokens/{documentId}
+    // Document ID pattern: {studentUid}_{date}
+    match /tokens/{documentId} {
+      // Warden can read all tokens; Students can only read their own applied tokens
+      allow read: if isWarden() || 
+        (isAuthenticated() && resource.data.studentUid == request.auth.uid);
+
+      // Students can create a token only for themselves with their verified KRCT email
+      allow create: if isAuthenticated() && 
+        isKrctEmail() &&
+        request.resource.data.studentUid == request.auth.uid &&
+        request.resource.data.studentEmail == request.auth.token.email &&
+        request.resource.data.category in ['Vegetarian', 'Non-Vegetarian'] &&
+        request.resource.data.status == 'Applied';
+
+      // Only Warden can update token status (e.g. marked as 'Redeemed' at mess counter)
+      allow update: if isWarden() && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'redeemedAt']);
+
+      // Students cannot delete applied tokens
+      allow delete: if false;
+    }
+
+    // Settings Collection: /settings/{docId}
+    match /settings/{docId} {
+      // All authenticated KRCT students and warden can read mess timings and cutoff
+      allow read: if isAuthenticated();
+      // Only the warden can modify mess deadline settings
+      allow write: if isWarden();
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Example Android Release Signing Properties
+# Copy this file to 'key.properties' and fill in your actual keystore details
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=upload-keystore.jks

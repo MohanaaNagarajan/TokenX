@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "324175759578",
+    "project_id": "tokenx-5496e",
+    "storage_bucket": "tokenx-5496e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324175759578:android:4b503c1027eb9cdd8afde3",
+        "android_client_info": {
+          "package_name": "com.krct.tokenx"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQISkqIxLcMB1t_oD10goinmxA1jjCbhk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
